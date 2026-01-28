@@ -205,8 +205,9 @@ kubectl get pods
 # Xem Ingress
 kubectl get ingress
 
-# Xem logs Vault Agent
-kubectl logs <pod-name> -c vault-agent-init
+# Xem logs Vault Agent (trong app pods, không phải vault-agent-injector)
+kubectl logs <nodejs-backend-pod> -c vault-agent-init
+kubectl logs mysql-0 -c vault-agent-init
 ```
 
 ---
