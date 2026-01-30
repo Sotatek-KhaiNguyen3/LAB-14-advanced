@@ -1,0 +1,45 @@
+# Demo/Documentation files
+demo2.md
+
+# Helm
+*.tgz
+charts/
+
+# Kubernetes
+*.kubeconfig
+kubeconfig
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temp files
+*.tmp
+*.temp
+.cache/
+
+# Secrets (never commit actual secrets)
+secrets/
+*.secret
+*.key
+*.pem
+*.crt
+
+# Node modules (if any local scripts)
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example

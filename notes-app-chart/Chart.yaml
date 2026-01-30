@@ -1,0 +1,6 @@
+apiVersion: v2
+name: notes-app
+description: Notes App Helm Chart with Vault secrets and Ingress
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

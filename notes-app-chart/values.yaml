@@ -1,0 +1,46 @@
+# Notes App Helm Chart Values
+
+# Vault Configuration
+vault:
+  enabled: true
+  address: "http://vault.vault.svc.cluster.local:8200"
+  secretPath: "secret/data/notes-app"
+  role: "notes-app"
+
+# MySQL StatefulSet
+mysql:
+  name: mysql
+  image: mysql:8.0
+  replicas: 1
+  port: 3306
+  storage: 1Gi
+  config:
+    maxConnections: 100
+    bufferPoolSize: 128M
+
+# NodeJS Backend
+backend:
+  name: nodejs-backend
+  image: nodejstodolist-nodejs-backend
+  replicas: 2
+  port: 3000
+
+# Frontend
+frontend:
+  name: frontend
+  image: nodejstodolist-frontend
+  replicas: 2
+  port: 3000
+
+# Ingress
+ingress:
+  enabled: true
+  className: nginx
+  host: notes.local
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+
+# Service "web" alias for frontend proxy
+webAlias:
+  enabled: true
+  port: 80

@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.backend.name }}
+  labels:
+    app: {{ .Values.backend.name }}
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.backend.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.backend.name }}
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "{{ .Values.vault.role }}"
+        vault.hashicorp.com/agent-inject-secret-app-creds: "{{ .Values.vault.secretPath }}"
+        vault.hashicorp.com/agent-inject-template-app-creds: |
+          {{`{{- with secret `}}"{{ .Values.vault.secretPath }}"{{` -}}`}}
+          export DB_PASSWORD="{{ `{{ .Data.data.DB_PASSWORD }}` }}"
+          export DB_NAME="{{ `{{ .Data.data.DB_NAME }}` }}"
+          export KEY="{{ `{{ .Data.data.KEY }}` }}"
+          {{`{{- end -}}`}}
+    spec:
+      serviceAccountName: notes-app
+      containers:
+      - name: backend
+        image: {{ .Values.backend.image }}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c
+        - |
+          source /vault/secrets/app-creds
+          node src/app.js
+        ports:
+        - containerPort: {{ .Values.backend.port }}
+        env:
+        - name: DB_HOST
+          value: {{ .Values.mysql.name }}-service
+        - name: DB_PORT
+          value: "{{ .Values.mysql.port }}"
+        - name: DB_USER
+          value: root

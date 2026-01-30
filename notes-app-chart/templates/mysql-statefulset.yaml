@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.mysql.name }}
+  labels:
+    app: {{ .Values.mysql.name }}
+spec:
+  serviceName: {{ .Values.mysql.name }}-service
+  replicas: {{ .Values.mysql.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.mysql.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mysql.name }}
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "{{ .Values.vault.role }}"
+        vault.hashicorp.com/agent-inject-secret-db-creds: "{{ .Values.vault.secretPath }}"
+        vault.hashicorp.com/agent-inject-template-db-creds: |
+          {{`{{- with secret `}}"{{ .Values.vault.secretPath }}"{{` -}}`}}
+          export MYSQL_ROOT_PASSWORD="{{ `{{ .Data.data.DB_PASSWORD }}` }}"
+          export MYSQL_DATABASE="{{ `{{ .Data.data.DB_NAME }}` }}"
+          {{`{{- end -}}`}}
+    spec:
+      serviceAccountName: notes-app
+      containers:
+      - name: mysql
+        image: {{ .Values.mysql.image }}
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c
+        - |
+          source /vault/secrets/db-creds
+          docker-entrypoint.sh mysqld
+        ports:
+        - containerPort: {{ .Values.mysql.port }}
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+        - name: mysql-config
+          mountPath: /etc/mysql/conf.d/my.cnf
+          subPath: my.cnf
+      volumes:
+      - name: mysql-config
+        configMap:
+          name: {{ .Values.mysql.name }}-config
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: {{ .Values.mysql.storage }}
